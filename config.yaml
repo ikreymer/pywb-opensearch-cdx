@@ -1,0 +1,11 @@
+collections:
+    replay:
+        index_paths: 'http://arquivo.pt/nutchwax/opensearch'
+
+        server_cls: !!python/name:opensearch.OpenSearchCDXServer
+
+
+# configure path to warcs here
+archive_paths: ./
+
+enable_cdx_api: true
