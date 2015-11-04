@@ -47,7 +47,7 @@ class OpenSearchCDXServer(CDXServer):
         full_url = self.opensearch_query + '?query=' + query
         print('QUERY', full_url)
 
-        is_text = (params.get('output') == 'text')
+        output = params.get('output', 'text')
         url = params.get('url')
         urlkey = canonicalize(url)
 
@@ -74,8 +74,11 @@ class OpenSearchCDXServer(CDXServer):
         else:
             cdx_list = cdx_sort_closest(EARLIEST_DATE, cdx_list, limit=10000)
 
-        if is_text:
+        if output == 'text':
             cdx_list = [str(cdx) + '\n' for cdx in cdx_list]
+        elif output == 'json':
+            fields = params.get('fl', '').split(',')
+            cdx_list = [cdx.to_json(fields) for cdx in cdx_list]
 
         return iter(cdx_list)
 
@@ -86,9 +89,10 @@ class OpenSearchCDXServer(CDXServer):
         cdx['timestamp'] = gettext(item, 'tstamp')[:14]
         cdx['url'] = url
         cdx['mime'] = gettext(item, 'primaryType') + '/' + gettext(item, 'subType')
-        cdx['status'] = '200'
+        cdx['status'] = '-'
         cdx['digest'] = gettext(item, 'digest')
-        cdx['length'] = gettext(item, 'contentLength')
+        #cdx['length'] = gettext(item, 'contentLength')
+        cdx['length'] = '-'
         cdx['offset'] = gettext(item, 'arcoffset')
         cdx['filename'] = gettext(item, 'arcname') + '.arc.gz'
         return cdx
