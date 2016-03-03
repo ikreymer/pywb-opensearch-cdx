@@ -17,6 +17,7 @@ except:
     print('Not using LXML')
 
 from urllib import quote_plus
+import urlparse
 
 import requests
 
@@ -127,14 +128,7 @@ class OpenSearchCDXServer(CDXServer):
         if not url:
             raise WbException('url= param is missing!')
 
-        if url.startswith(('http://', 'https://')):
-            return
-        elif url.startswith('//'):
-            url = 'http:' + url
-        else:
-            url = 'http://' + url
-
-        params['url'] = url
+        params['url'] = format_url(url)
 
 
 def gettext(item, name):
@@ -143,3 +137,43 @@ def gettext(item, name):
         return elem.text
     else:
         return '-'
+
+
+def format_url(url):
+    """
+    >>> format_url('example.com')
+    'http://example.com'
+
+    >>> format_url('http://example.com:80/blah')
+    'http://example.com/blah'
+
+    >>> format_url('https://example.com:80/foo')
+    'https://example.com:80/foo'
+
+    >>> format_url('example.com:8080')
+    'http://example.com:8080'
+
+    >>> format_url('https://example.com:443/path?foo=bar#abc')
+    'https://example.com/path?foo=bar#abc'
+
+    >>> format_url('http://example.com:443/path?foo=bar#abc')
+    'http://example.com:443/path?foo=bar#abc'
+
+    """
+    if url.startswith(('http://', 'https://')):
+        pass
+    elif url.startswith('//'):
+        url = 'http:' + url
+    else:
+        url = 'http://' + url
+
+    parts = urlparse.urlsplit(url)
+    if ((parts.scheme == 'http' and parts.netloc.endswith(':80')) or
+        (parts.scheme == 'https' and parts.netloc.endswith(':443'))):
+        parts = list(parts)
+        parts[1] = parts[1].split(':')[0]
+        url = urlparse.urlunsplit(parts)
+
+    return url
+
+
